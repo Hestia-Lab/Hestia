@@ -1,0 +1,22 @@
+{
+  "name": "hestia-build",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Hestia — programmable privacy layer for agents on Base. Shielded pools, compliant by construction, API + SDK.",
+  "packageManager": "pnpm@10.19.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "lint": "turbo run lint",
+    "clean": "turbo run clean"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "turbo": "^2.9.0",
+    "typescript": "^5"
+  }
+}

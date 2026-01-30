@@ -1,0 +1,35 @@
+# dependencies
+node_modules/
+.pnpm-store/
+
+# local package tarballs (pnpm pack output for pre-publish consumption)
+.artifacts/
+
+# build output
+dist/
+.turbo/
+.next/
+out/
+coverage/
+
+# circuits artifacts (large / generated)
+packages/circuits/build/
+*.zkey
+*.ptau
+*.r1cs
+*.wasm
+*.sym
+
+# foundry
+packages/contracts/cache/
+packages/contracts/out/
+packages/contracts/broadcast/
+
+# env & secrets
+.env
+.env.*
+!.env.example
+
+# misc
+*.log
+.DS_Store
