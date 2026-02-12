@@ -1,0 +1,10 @@
+{
+  "name": "@hestia/contracts",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Hestia on-chain pool, association-set registry, and generated verifiers (Foundry).",
+  "scripts": {
+    "build": "echo '[contracts] use Foundry: forge build'",
+    "test": "echo '[contracts] use Foundry: forge test'"
+  }
+}
