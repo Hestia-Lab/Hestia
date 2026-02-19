@@ -38,6 +38,7 @@ export function bigIntToBytes32BE(x: bigint): Uint8Array {
     out[i] = Number(v & 0xffn);
     v >>= 8n;
   }
+  if (v !== 0n) throw new RangeError("value exceeds 32 bytes");
   return out;
 }
 
