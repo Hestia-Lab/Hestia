@@ -43,7 +43,7 @@ function deserialize(b: Uint8Array): NotePlaintext {
 
 /** Derive a single-use key+nonce from the shared secret, bound to both public keys. */
 function deriveKeyNonce(shared: Uint8Array, ephemeralPub: Uint8Array, recipientPub: Uint8Array) {
-  const salt = ephemeralPub;
+  const salt = concatBytes(ephemeralPub, recipientPub);
   const out = hkdf(sha256, shared, salt, HKDF_INFO, 44); // 32-byte key + 12-byte nonce
   return { key: out.subarray(0, 32), nonce: out.subarray(32, 44) };
 }
