@@ -28,7 +28,7 @@ export async function deriveKeysFromSeed(seed: Uint8Array): Promise<Keys> {
   if (seed.length !== 32) throw new Error("seed must be exactly 32 bytes");
   const sk = await poseidon([toField(seed), 0n]);
   const SK = await poseidon([sk]);
-  const vk = keccak_256(seed);
+  const vk = keccak_256(concatBytes(seed, Uint8Array.of(1)));
   const VK = x25519.getPublicKey(vk);
   return { sk, SK, vk, VK };
 }
