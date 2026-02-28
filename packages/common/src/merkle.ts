@@ -64,7 +64,7 @@ export class IncrementalMerkleTree {
       const layer = this.layers[level]!;
       const isRight = idx & 1;
       const left = isRight ? layer[idx - 1]! : layer[idx]!;
-      const right = isRight ? layer[idx]! : layer[idx + 1]!;
+      const right = isRight ? layer[idx]! : (layer[idx + 1] ?? this.zeros[level]!);
       const parentIdx = idx >> 1;
       this.layers[level + 1]![parentIdx] = this.hasher.hash([left, right]);
       idx = parentIdx;
