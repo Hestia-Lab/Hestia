@@ -128,4 +128,9 @@ template Transaction(nIns, nOuts, depth) {
     // value conservation
     sumIn === sumOut + withdrawAmount;
 
+    // bind otherwise-unused public inputs so they cannot be tampered post-proof
+    signal recipientSq;
+    recipientSq <== recipient * recipient;
+    signal relayerSq;
+    relayerSq <== relayer * relayer;
 }
