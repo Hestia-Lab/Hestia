@@ -126,7 +126,7 @@ template Transaction(nIns, nOuts, depth) {
     fRange.in <== feeAmount;
 
     // value conservation
-    sumIn === sumOut + withdrawAmount;
+    sumIn === sumOut + withdrawAmount + feeAmount;
 
     // bind otherwise-unused public inputs so they cannot be tampered post-proof
     signal recipientSq;
