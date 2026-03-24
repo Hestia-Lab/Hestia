@@ -86,3 +86,22 @@ export async function buildTransactionInput(p: TransactionParams): Promise<Recor
     outRandomness: p.outputs.map((o) => o.randomness),
   };
 }
+
+export async function proveTransaction(arity: Arity, input: Record<string, unknown>) {
+  const { wasm, zkey } = artifactPaths(arity);
+  return snarkjs.groth16.fullProve(input, wasm, zkey);
+}
+
+export async function proveForContract(arity: Arity, input: Record<string, unknown>): Promise<ContractProof> {
+  const { wasm, zkey } = artifactPaths(arity);
+  return proveForContractWith(input, { wasm, zkey });
+}
+
+export async function verifyTransaction(
+  arity: Arity,
+  publicSignals: string[],
+  proof: snarkjs.Groth16Proof,
+): Promise<boolean> {
+  const vkey = JSON.parse(readFileSync(artifactPaths(arity).vkey, "utf8"));
+  return snarkjs.groth16.verify(vkey, publicSignals, proof);
+}
