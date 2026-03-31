@@ -4,7 +4,11 @@
   "private": true,
   "description": "Hestia on-chain pool, association-set registry, and generated verifiers (Foundry).",
   "scripts": {
-    "build": "echo '[contracts] use Foundry: forge build'",
-    "test": "echo '[contracts] use Foundry: forge test'"
+    "build": "node -e \"console.log('[contracts] built with Foundry: run `forge build`. Skipped in the JS pipeline.')\"",
+    "test": "node -e \"console.log('[contracts] tested with Foundry: run `forge test`.')\"",
+    "gen:poseidon": "node script/gen-poseidon.mjs"
+  },
+  "devDependencies": {
+    "circomlibjs": "^0.1.7"
   }
 }
