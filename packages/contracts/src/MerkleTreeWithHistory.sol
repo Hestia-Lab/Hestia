@@ -66,6 +66,7 @@ contract MerkleTreeWithHistory {
 
     // True if `root` is the current root or one of the last ROOT_HISTORY_SIZE roots.
     function isKnownRoot(uint256 root) public view returns (bool) {
+        if (root == 0) return false;
         uint256 i = currentRootIndex;
         do {
             if (root == roots[i]) return true;
