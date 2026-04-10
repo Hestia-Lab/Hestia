@@ -20,7 +20,7 @@ contract MerkleTreeWithHistory {
     uint256 public nextLeafIndex;
 
     constructor(uint256 _levels, address _hasher) {
-        require(_levels > 0, "levels out of range");
+        require(_levels > 0 && _levels <= 32, "levels out of range");
         levels = _levels;
         hasher = IPoseidon2(_hasher);
 
