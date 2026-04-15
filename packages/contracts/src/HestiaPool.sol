@@ -107,6 +107,7 @@ contract HestiaPool is MerkleTreeWithHistory {
         if (token == NATIVE_ETH) {
             if (msg.value != amount) revert WrongEthValue();
         } else {
+            if (msg.value != 0) revert WrongEthValue();
             _pullERC20(token, msg.sender, amount);
         }
 
