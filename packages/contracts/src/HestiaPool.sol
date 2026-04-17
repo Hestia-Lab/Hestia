@@ -101,7 +101,7 @@ contract HestiaPool is MerkleTreeWithHistory {
         bytes calldata encryptedNote
     ) external payable nonReentrant returns (uint256 leafIndex, uint256 commitment) {
         if (token != NATIVE_ETH && token != address(usdc)) revert UnsupportedToken();
-        if (amount == 0) revert BadAmount();
+        if (amount == 0 || amount >= MAX_VALUE) revert BadAmount();
         if (ownerSK >= FIELD_MODULUS || randomness >= FIELD_MODULUS) revert NotFieldElement();
 
         if (token == NATIVE_ETH) {
