@@ -119,9 +119,113 @@ contract HestiaPool is MerkleTreeWithHistory {
         _insert(commitment);
         emit Shield(commitment, leafIndex, label, token, amount, encryptedNote);
     }
+
+    // -------------------------------------------------------------------------
+    // Transact (send / unshield) — Groth16 join-split.
+    // -------------------------------------------------------------------------
+    function transact1x2(
+        uint256[2] calldata a,
+        uint256[2][2] calldata b,
+        uint256[2] calldata c,
+        uint256[1] calldata nullifiers,
+        uint256[2] calldata outCommitments,
+        TransactData calldata d,
+        bytes[2] calldata encryptedNotes
+    ) external nonReentrant {
+        uint256[10] memory pub;
+        pub[0] = nullifiers[0];
+        pub[1] = outCommitments[0];
+        pub[2] = outCommitments[1];
+        pub[3] = d.root;
+        pub[4] = d.associationRoot;
+        pub[5] = d.withdrawAmount;
+        pub[6] = uint256(uint160(d.token));
+        pub[7] = uint256(uint160(d.recipient));
+        pub[8] = d.feeAmount;
+        pub[9] = uint256(uint160(d.relayer));
+        if (!verifier1x2.verifyProof(a, b, c, pub)) revert InvalidProof();
+
+        _validate(d);
+        _spend(nullifiers[0]);
+        _insertOutput(outCommitments[0], encryptedNotes[0]);
+        _insertOutput(outCommitments[1], encryptedNotes[1]);
+        _payout(d);
+    }
+
+    function transact2x2(
+        uint256[2] calldata a,
+        uint256[2][2] calldata b,
+        uint256[2] calldata c,
+        uint256[2] calldata nullifiers,
+        uint256[2] calldata outCommitments,
+        TransactData calldata d,
+        bytes[2] calldata encryptedNotes
+    ) external nonReentrant {
+        uint256[11] memory pub;
+        pub[0] = nullifiers[0];
+        pub[1] = nullifiers[1];
+        pub[2] = outCommitments[0];
+        pub[3] = outCommitments[1];
+        pub[4] = d.root;
+        pub[5] = d.associationRoot;
+        pub[6] = d.withdrawAmount;
+        pub[7] = uint256(uint160(d.token));
+        pub[8] = uint256(uint160(d.recipient));
+        pub[9] = d.feeAmount;
+        pub[10] = uint256(uint160(d.relayer));
+        if (!verifier2x2.verifyProof(a, b, c, pub)) revert InvalidProof();
+
+        _validate(d);
+        _spend(nullifiers[0]);
+        _spend(nullifiers[1]);
+        _insertOutput(outCommitments[0], encryptedNotes[0]);
+        _insertOutput(outCommitments[1], encryptedNotes[1]);
+        _payout(d);
+    }
+
+    // -------------------------------------------------------------------------
+    // Internals
+    // -------------------------------------------------------------------------
+    function _spend(uint256 nullifier) private {
+        if (nullifierSpent[nullifier]) revert NullifierAlreadyUsed();
+        nullifierSpent[nullifier] = true;
+        emit Nullified(nullifier);
+    }
+
+    function _insertOutput(uint256 commitment, bytes calldata encryptedNote) private returns (uint256 leafIndex) {
+        leafIndex = _insert(commitment);
+        emit Commitment(commitment, leafIndex, encryptedNote);
+    }
+
+    // Cheap checks first (fail fast); the whole call reverts atomically on failure anyway.
+    function _validate(TransactData calldata d) private view {
+        if (!isKnownRoot(d.root)) revert UnknownRoot();
+        if (d.token != NATIVE_ETH && d.token != address(usdc)) revert UnsupportedToken();
+    }
+
+    // Payouts last (checks-effects-interactions: nullifiers/commitments are already written).
+    function _payout(TransactData calldata d) private {
+        if (d.withdrawAmount > 0) _transferOut(d.token, d.recipient, d.withdrawAmount);
+        if (d.feeAmount > 0) _transferOut(d.token, d.relayer, d.feeAmount);
+        if (d.withdrawAmount > 0 || d.feeAmount > 0) {
+            emit Unshield(d.token, d.recipient, d.withdrawAmount, d.relayer, d.feeAmount);
+        }
+    }
+
     function _pullERC20(address token, address from, uint256 amount) private {
         (bool ok, bytes memory data) =
             token.call(abi.encodeWithSelector(IERC20.transferFrom.selector, from, address(this), amount));
         if (!ok || (data.length != 0 && !abi.decode(data, (bool)))) revert TransferFailed();
+    }
+
+    function _transferOut(address token, address to, uint256 amount) private {
+        if (token == NATIVE_ETH) {
+            (bool ok,) = payable(to).call{value: amount}("");
+            if (!ok) revert TransferFailed();
+        } else {
+            (bool ok, bytes memory data) =
+                token.call(abi.encodeWithSelector(IERC20.transfer.selector, to, amount));
+            if (!ok || (data.length != 0 && !abi.decode(data, (bool)))) revert TransferFailed();
+        }
     }
 }
