@@ -200,6 +200,7 @@ contract HestiaPool is MerkleTreeWithHistory {
     // Cheap checks first (fail fast); the whole call reverts atomically on failure anyway.
     function _validate(TransactData calldata d) private view {
         if (!isKnownRoot(d.root)) revert UnknownRoot();
+        if (!associations.isValidRoot(d.associationRoot)) revert InvalidAssociationRoot();
         if (d.token != NATIVE_ETH && d.token != address(usdc)) revert UnsupportedToken();
     }
 
