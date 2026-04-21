@@ -70,6 +70,24 @@ contract HestiaPoolTest is Base {
         vm.deal(address(this), amount);
         pool.shield{value: amount}(ETH, amount, ownerSK, randomness, "");
     }
+
+    function _txData() internal view returns (HestiaPool.TransactData memory) {
+        return HestiaPool.TransactData({
+            root: fxRoot,
+            associationRoot: assocRoot,
+            withdrawAmount: withdrawAmount,
+            token: ETH,
+            recipient: recipient,
+            feeAmount: feeAmount,
+            relayer: relayer
+        });
+    }
+
+    function _approveAsp() internal {
+        registry.setASP(address(this), true);
+        registry.publishRoot(assocRoot, "ipfs://approved-set");
+    }
+
     // The on-chain shield must reproduce @hestia/common's commitment + Merkle root.
     function test_shieldEth_reproducesOffchainRoot() public {
         _shieldEth();
@@ -77,6 +95,48 @@ contract HestiaPoolTest is Base {
         assertEq(pool.nextLeafIndex(), 1);
         assertEq(address(pool).balance, amount);
     }
+
+    function test_unshieldEth_endToEnd() public {
+        _shieldEth();
+        _approveAsp();
+
+        bytes[2] memory enc;
+        pool.transact1x2(pA, pB, pC, [nullifier0], [outC0, outC1], _txData(), enc);
+
+        assertEq(recipient.balance, withdrawAmount);
+        assertEq(relayer.balance, feeAmount);
+        assertEq(address(pool).balance, amount - withdrawAmount - feeAmount);
+        assertTrue(pool.nullifierSpent(nullifier0));
+        assertEq(pool.nextLeafIndex(), 3); // 1 shield + 2 outputs
+    }
+
+    function test_transact_revertsWhenAssociationRootNotApproved() public {
+        _shieldEth();
+        // ASP root deliberately NOT published
+        bytes[2] memory enc;
+        vm.expectRevert(HestiaPool.InvalidAssociationRoot.selector);
+        pool.transact1x2(pA, pB, pC, [nullifier0], [outC0, outC1], _txData(), enc);
+    }
+
+    function test_transact_revertsOnDoubleSpend() public {
+        _shieldEth();
+        _approveAsp();
+        bytes[2] memory enc;
+        pool.transact1x2(pA, pB, pC, [nullifier0], [outC0, outC1], _txData(), enc);
+
+        vm.expectRevert(HestiaPool.NullifierAlreadyUsed.selector);
+        pool.transact1x2(pA, pB, pC, [nullifier0], [outC0, outC1], _txData(), enc);
+    }
+
+    function test_transact_revertsOnForgedNullifier() public {
+        _shieldEth();
+        _approveAsp();
+        bytes[2] memory enc;
+        // Proof was generated for nullifier0; substituting a different one breaks verification.
+        vm.expectRevert(HestiaPool.InvalidProof.selector);
+        pool.transact1x2(pA, pB, pC, [nullifier0 + 1], [outC0, outC1], _txData(), enc);
+    }
+
     function test_shieldUsdc_pullsFunds() public {
         usdc.mint(address(this), 5_000_000);
         usdc.approve(address(pool), 5_000_000);
