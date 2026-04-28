@@ -32,6 +32,9 @@ export class HestiaStore {
 
   /** Insert a leaf. Leaves must arrive in `leafIndex` order (the chain emits them sequentially). */
   applyCommitment(commitment: bigint, leafIndex: number, encryptedNote: Hex, blockNumber: bigint): void {
+    if (leafIndex !== this.tree.leafCount) {
+      throw new Error(`out-of-order leaf: expected ${this.tree.leafCount}, got ${leafIndex}`);
+    }
     this.tree.insert(commitment);
     this._notes.push({ leafIndex, commitment, encryptedNote, blockNumber });
   }
