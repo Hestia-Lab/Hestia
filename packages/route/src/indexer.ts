@@ -26,7 +26,7 @@ export class Indexer {
   /** Fetch and apply all events from the last indexed block to the chain head. */
   async sync(): Promise<void> {
     const head = await this.client.getBlockNumber();
-    const fromBlock = this.store.lastBlock === 0n ? 0n : this.store.lastBlock;
+    const fromBlock = this.store.lastBlock === 0n ? 0n : this.store.lastBlock + 1n;
     if (fromBlock > head) return;
 
     const [shields, commitments, nullifieds, rootsPublished, rootsRevoked] = await Promise.all([
