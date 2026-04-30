@@ -29,4 +29,25 @@ describe("HestiaStore (indexer reconstruction)", () => {
     const s = await HestiaStore.create(32);
     expect(() => s.applyCommitment(111n, 1, "0x", 1n)).toThrow();
   });
+
+  it("tracks nullifiers and ASP roots", async () => {
+    const s = await HestiaStore.create(32);
+    s.applyNullifier(42n);
+    expect(s.isNullified(42n)).toBe(true);
+    expect(s.isNullified(43n)).toBe(false);
+
+    s.applyAspRoot(7n, "ipfs://set");
+    expect(s.isKnownAspRoot(7n)).toBe(true);
+    expect(s.aspRootUri(7n)).toBe("ipfs://set");
+    s.revokeAspRoot(7n);
+    expect(s.isKnownAspRoot(7n)).toBe(false);
+  });
+
+  it("notesSince filters by block", async () => {
+    const s = await HestiaStore.create(32);
+    s.applyCommitment(COMMITMENT_FIXED, 0, "0xaa", 5n);
+    s.applyCommitment(111n, 1, "0xbb", 10n);
+    expect(s.notesSince(8n).length).toBe(1);
+    expect(s.notesSince(0n).length).toBe(2);
+  });
 });
