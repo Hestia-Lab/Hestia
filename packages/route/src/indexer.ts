@@ -62,6 +62,9 @@ export class Indexer {
       this.store.applyCommitment(leaf.commitment, leaf.leafIndex, leaf.encryptedNote, leaf.blockNumber);
     }
 
+    for (const e of nullifieds) this.store.applyNullifier(e.args.nullifier as bigint);
+    for (const e of rootsPublished) this.store.applyAspRoot(e.args.root as bigint, (e.args.uri as string) ?? "");
+    for (const e of rootsRevoked) this.store.revokeAspRoot(e.args.root as bigint);
 
     this.store.lastBlock = head;
   }
