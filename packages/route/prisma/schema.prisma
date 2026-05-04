@@ -1,0 +1,47 @@
+// Production persistence for the indexer (SPEC §7). The chain is the source of truth; these
+// tables are a durable cache so the service can restart without re-scanning from genesis.
+// v1 runs an in-memory store (src/store.ts); wiring a Prisma-backed store is the Railway step.
+//
+// Railway: run `prisma migrate deploy` at START (not build); DATABASE_URL via a reference var.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Commitment {
+  leafIndex  Int     @id
+  commitment String  @unique
+  cipher     String // encrypted note (hex)
+  block      BigInt
+  txHash     String
+  createdAt  DateTime @default(now())
+
+  @@index([block])
+}
+
+model Nullifier {
+  hash   String @id
+  block  BigInt
+  txHash String
+}
+
+model AspRoot {
+  root      String  @id
+  asp       String
+  uri       String
+  revoked   Boolean @default(false)
+  block     BigInt
+  createdAt DateTime @default(now())
+}
+
+
+
+model IndexerCursor {
+  id        Int    @id @default(1)
+  lastBlock BigInt
+}
