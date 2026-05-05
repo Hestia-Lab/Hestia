@@ -31,6 +31,13 @@ export interface RelayRequest1x2 {
   encryptedNotes: readonly [Hex, Hex];
 }
 
+export interface RelayRequest2x2 {
+  proof: ProofPoints;
+  nullifiers: readonly [bigint, bigint];
+  outCommitments: readonly [bigint, bigint];
+  data: TransactData;
+  encryptedNotes: readonly [Hex, Hex];
+}
 
 function requireAccount(wallet: WalletClient) {
   if (!wallet.account) throw new Error("relayer wallet has no account");
@@ -48,3 +55,13 @@ export function relayTransact1x2(wallet: WalletClient, pool: Address, r: RelayRe
   });
 }
 
+export function relayTransact2x2(wallet: WalletClient, pool: Address, r: RelayRequest2x2): Promise<Hex> {
+  return wallet.writeContract({
+    address: pool,
+    abi: poolAbi,
+    functionName: "transact2x2",
+    args: [r.proof.a, r.proof.b, r.proof.c, r.nullifiers, r.outCommitments, r.data, r.encryptedNotes],
+    account: requireAccount(wallet),
+    chain: wallet.chain,
+  });
+}
