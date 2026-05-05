@@ -39,7 +39,19 @@ model AspRoot {
   createdAt DateTime @default(now())
 }
 
+model Agent {
+  id         String   @id @default(cuid())
+  apiKeyHash String   @unique
+  createdAt  DateTime @default(now())
+}
 
+model RelayJob {
+  id        String   @id @default(cuid())
+  status    String // queued | submitted | confirmed | failed
+  txHash    String?
+  error     String?
+  createdAt DateTime @default(now())
+}
 
 model IndexerCursor {
   id        Int    @id @default(1)
