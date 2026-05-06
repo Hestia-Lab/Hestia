@@ -96,6 +96,53 @@ async function route(
     if (p === "/api/v1/nullifier/status") return json(res, 200, nullifierStatus(store, BigInt(q.get("nullifier") ?? "0")));
   }
 
+  if (req.method === "POST" && p === "/api/v1/relay") {
+    if (!wallet) return json(res, 503, { error: "relayer not configured (set HESTIA_RELAYER_KEY)" });
+    const parsed = relaySchema.safeParse(await readBody(req));
+    if (!parsed.success) return json(res, 400, { error: "invalid relay request", issues: parsed.error.issues });
+    const txHash = await submitRelay(wallet, pool, parsed.data);
+    return json(res, 200, { txHash });
+  }
+
   json(res, 404, { error: "not found" });
 }
 
+async function submitRelay(
+  wallet: ReturnType<typeof createWalletClient>,
+  pool: Address,
+  r: z.infer<typeof relaySchema>,
+): Promise<string> {
+  const proof = {
+    a: [BigInt(r.proof.a[0]), BigInt(r.proof.a[1])] as [bigint, bigint],
+    b: [
+      [BigInt(r.proof.b[0][0]), BigInt(r.proof.b[0][1])],
+      [BigInt(r.proof.b[1][0]), BigInt(r.proof.b[1][1])],
+    ] as [[bigint, bigint], [bigint, bigint]],
+    c: [BigInt(r.proof.c[0]), BigInt(r.proof.c[1])] as [bigint, bigint],
+  };
+  const data = {
+    root: BigInt(r.data.root),
+    associationRoot: BigInt(r.data.associationRoot),
+    withdrawAmount: BigInt(r.data.withdrawAmount),
+    token: r.data.token as Address,
+    recipient: r.data.recipient as Address,
+    feeAmount: BigInt(r.data.feeAmount),
+    relayer: r.data.relayer as Address,
+  };
+  const outCommitments: [bigint, bigint] = [BigInt(r.outCommitments[0]), BigInt(r.outCommitments[1])];
+  const encryptedNotes: [`0x${string}`, `0x${string}`] = [
+    r.encryptedNotes[0] as `0x${string}`,
+    r.encryptedNotes[1] as `0x${string}`,
+  ];
+
+  if (r.arity === "1x2") {
+    return relayTransact1x2(wallet, pool, { proof, nullifiers: [BigInt(r.nullifiers[0]!)], outCommitments, data, encryptedNotes });
+  }
+  return relayTransact2x2(wallet, pool, {
+    proof,
+    nullifiers: [BigInt(r.nullifiers[0]!), BigInt(r.nullifiers[1]!)],
+    outCommitments,
+    data,
+    encryptedNotes,
+  });
+}
