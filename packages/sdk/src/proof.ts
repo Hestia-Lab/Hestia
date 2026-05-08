@@ -47,3 +47,10 @@ export function buildCircuitInput(w: TransactionWitness): Record<string, unknown
   };
 }
 
+export async function proveTransactionWitness(
+  w: TransactionWitness,
+  artifacts: ArtifactsByArity,
+): Promise<ContractProof> {
+  const arity: Arity = w.inputs.length === 1 ? "1x2" : "2x2";
+  return proveForContractWith(buildCircuitInput(w), artifacts[arity]);
+}
