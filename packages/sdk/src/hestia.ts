@@ -170,5 +170,14 @@ export class Hestia {
     return records;
   }
 
+  private async selectNote(tokenField: bigint, required: bigint): Promise<SpendInput> {
+    const notes = await this.ownedNotes();
+    // Single-lineage: one input note per tx (1x2). Pick the smallest note that covers `required`.
+    const candidate = notes
+      .filter((r) => r.note.token === tokenField && r.note.value >= required)
+      .sort((a, b) => (a.note.value < b.note.value ? -1 : 1))[0];
+    if (!candidate) throw new InsufficientPrivateBalance(tokenField, required);
+    return { note: candidate.note, leafIndex: candidate.leafIndex, merkleProof: this.store.proof(candidate.leafIndex) };
+  }
 
 }
