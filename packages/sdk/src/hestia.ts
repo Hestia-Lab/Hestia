@@ -141,6 +141,11 @@ export class Hestia {
     await this.indexer.sync();
   }
 
+  async balance(token: Address): Promise<bigint> {
+    const tf = this.tokenField(token);
+    const notes = await this.ownedNotes();
+    return notes.filter((r) => !r.spent && r.note.token === tf).reduce((sum, r) => sum + r.note.value, 0n);
+  }
 
 
 
@@ -151,6 +156,18 @@ export class Hestia {
     return token.toLowerCase() === NATIVE_ETH.toLowerCase() ? 0n : addressToField(token);
   }
 
+  private async ownedNotes(): Promise<NoteRecord[]> {
+    const records: NoteRecord[] = [];
+    for (const indexed of this.store.notesSince(0n)) {
+      const pt = decryptNote(this.keys.vk, hexToBytes(indexed.encryptedNote));
+      if (!pt) continue;
+      const note: Note = { value: pt.value, token: pt.token, owner: this.keys.SK, label: pt.label, randomness: pt.randomness };
+      const c = await commitment(note);
+      const nf = await nullifier(c, indexed.leafIndex, this.keys.sk);
+      records.push({ note, leafIndex: indexed.leafIndex, commitment: c, nullifier: nf, spent: this.store.isNullified(nf) });
+    }
+    return records;
+  }
 
 
 }
