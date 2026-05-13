@@ -163,6 +163,7 @@ export class Hestia {
       if (!pt) continue;
       const note: Note = { value: pt.value, token: pt.token, owner: this.keys.SK, label: pt.label, randomness: pt.randomness };
       const c = await commitment(note);
+      if (c !== indexed.commitment) continue; // ciphertext decrypted but isn't a note we own
       const nf = await nullifier(c, indexed.leafIndex, this.keys.sk);
       records.push({ note, leafIndex: indexed.leafIndex, commitment: c, nullifier: nf, spent: this.store.isNullified(nf) });
     }
