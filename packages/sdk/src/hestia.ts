@@ -186,6 +186,35 @@ export class Hestia {
   }
 
 
+  /** Withdraw to a clean public address (the relayer pays gas, so it has no funding history). */
+  async unshield(args: { token: Address; amount: bigint; to: Address; fee?: bigint }): Promise<Hex> {
+    const fee = args.fee ?? 0n;
+    const tf = this.tokenField(args.token);
+    const input = await this.selectNote(tf, args.amount + fee);
+    const label = input.note.label;
+
+    const change: Note = {
+      value: input.note.value - args.amount - fee,
+      token: tf,
+      owner: this.keys.SK,
+      label,
+      randomness: randomFieldElement(),
+    };
+    const empty: Note = { value: 0n, token: tf, owner: this.keys.SK, label, randomness: randomFieldElement() };
+    const enc0 = bytesToHex(encryptNote(this.keys.VK, { value: change.value, token: tf, label, randomness: change.randomness }));
+    const enc1 = bytesToHex(encryptNote(this.keys.VK, { value: 0n, token: tf, label, randomness: empty.randomness }));
+
+    return this.submit({
+      input,
+      outputs: [change, empty],
+      encryptedNotes: [enc0, enc1],
+      token: args.token,
+      tokenField: tf,
+      withdrawAmount: args.amount,
+      recipientAddr: args.to,
+      fee,
+    });
+  }
 
   // --- internals ---
 
