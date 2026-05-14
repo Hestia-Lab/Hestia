@@ -217,4 +217,47 @@ export class Hestia {
     return { note: candidate.note, leafIndex: candidate.leafIndex, merkleProof: this.store.proof(candidate.leafIndex) };
   }
 
+  private async submit(p: SubmitParams): Promise<Hex> {
+    const associationRoot = await this.association.root();
+    const associationProof = await this.association.proof(p.input.note.label);
+    const recipientField = p.recipientAddr.toLowerCase() === zeroAddress ? 0n : addressToField(p.recipientAddr);
+
+    const proof = await proveTransactionWitness({
+      sk: this.keys.sk,
+      token: p.tokenField,
+      inputs: [p.input],
+      outputs: p.outputs,
+      withdrawAmount: p.withdrawAmount,
+      feeAmount: p.fee,
+      recipient: recipientField,
+      relayer: addressToField(this.address),
+      associationRoot,
+      associationProof,
+    }, this.artifacts);
+
+    const outCommitments: [bigint, bigint] = [await commitment(p.outputs[0]), await commitment(p.outputs[1])];
+    // merkleProof.leaf is the spent note's commitment.
+    const nf = await nullifier(p.input.merkleProof.leaf, p.input.leafIndex, this.keys.sk);
+
+    const data: TransactData = {
+      root: p.input.merkleProof.root,
+      associationRoot,
+      withdrawAmount: p.withdrawAmount,
+      token: p.token,
+      recipient: p.recipientAddr,
+      feeAmount: p.fee,
+      relayer: this.address,
+    };
+    const req: RelayRequest1x2 = {
+      proof: { a: proof.a, b: proof.b, c: proof.c },
+      nullifiers: [nf],
+      outCommitments,
+      data,
+      encryptedNotes: p.encryptedNotes,
+    };
+
+    const hash = await relayTransact1x2(this.wallet, this.pool, req);
+    await this.publicClient.waitForTransactionReceipt({ hash });
+    return hash;
+  }
 }
