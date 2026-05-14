@@ -147,6 +147,43 @@ export class Hestia {
     return notes.filter((r) => !r.spent && r.note.token === tf).reduce((sum, r) => sum + r.note.value, 0n);
   }
 
+  async shield(args: { token: Address; amount: bigint }): Promise<Hex> {
+    const tf = this.tokenField(args.token);
+    const isEth = tf === 0n;
+
+    if (!isEth) {
+      const approveHash = await this.wallet.writeContract({
+        address: args.token,
+        abi: erc20Abi,
+        functionName: "approve",
+        args: [this.pool, args.amount],
+        account: this.account,
+        chain: this.chain,
+      });
+      await this.publicClient.waitForTransactionReceipt({ hash: approveHash });
+    }
+
+    const leafIndex = (await this.publicClient.readContract({
+      address: this.pool,
+      abi: poolAbi,
+      functionName: "nextLeafIndex",
+    })) as bigint;
+    const label = await labelFromLeafIndex(Number(leafIndex));
+    const randomness = randomFieldElement();
+    const cipher = bytesToHex(encryptNote(this.keys.VK, { value: args.amount, token: tf, label, randomness }));
+
+    const hash = await this.wallet.writeContract({
+      address: this.pool,
+      abi: poolAbi,
+      functionName: "shield",
+      args: [args.token, args.amount, this.keys.SK, randomness, cipher],
+      value: isEth ? args.amount : 0n,
+      account: this.account,
+      chain: this.chain,
+    });
+    await this.publicClient.waitForTransactionReceipt({ hash });
+    return hash;
+  }
 
 
 
