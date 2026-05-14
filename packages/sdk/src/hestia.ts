@@ -185,6 +185,36 @@ export class Hestia {
     return hash;
   }
 
+  /** Private transfer to another agent's meta-address. */
+  async send(args: { token: Address; amount: bigint; to: string; fee?: bigint }): Promise<Hex> {
+    const fee = args.fee ?? 0n;
+    const tf = this.tokenField(args.token);
+    const recipient = decodeMetaAddress(args.to);
+    const input = await this.selectNote(tf, args.amount + fee);
+    const label = input.note.label;
+
+    const out0: Note = { value: args.amount, token: tf, owner: recipient.SK, label, randomness: randomFieldElement() };
+    const out1: Note = {
+      value: input.note.value - args.amount - fee,
+      token: tf,
+      owner: this.keys.SK,
+      label,
+      randomness: randomFieldElement(),
+    };
+    const enc0 = bytesToHex(encryptNote(recipient.VK, { value: out0.value, token: tf, label, randomness: out0.randomness }));
+    const enc1 = bytesToHex(encryptNote(this.keys.VK, { value: out1.value, token: tf, label, randomness: out1.randomness }));
+
+    return this.submit({
+      input,
+      outputs: [out0, out1],
+      encryptedNotes: [enc0, enc1],
+      token: args.token,
+      tokenField: tf,
+      withdrawAmount: 0n,
+      recipientAddr: zeroAddress,
+      fee,
+    });
+  }
 
   /** Withdraw to a clean public address (the relayer pays gas, so it has no funding history). */
   async unshield(args: { token: Address; amount: bigint; to: Address; fee?: bigint }): Promise<Hex> {
