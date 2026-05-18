@@ -78,3 +78,23 @@ console.log("• published association root");
 const cfg = { chain: foundry, rpcUrl: RPC, pool, registry, usdc, association, artifacts };
 const alice = await Hestia.create({ ...cfg, account: deployer, keys: await deriveKeysFromSeed(new Uint8Array(32).fill(7)) });
 const bob = await Hestia.create({ ...cfg, account: bobAccount, keys: await deriveKeysFromSeed(new Uint8Array(32).fill(9)) });
+
+const SHIELD = parseEther("0.001");
+const SEND = parseEther("0.0006");
+const WITHDRAW = parseEther("0.0005");
+const FEE = parseEther("0.00001");
+
+console.log("• Alice shields 0.001 ETH");
+await alice.shield({ token: NATIVE_ETH, amount: SHIELD });
+await alice.sync();
+assert.equal(await alice.balance(NATIVE_ETH), SHIELD, "Alice shield balance");
+
+console.log("• Alice sends 0.0006 ETH privately to Bob's meta-address");
+await alice.send({ token: NATIVE_ETH, amount: SEND, to: bob.metaAddress });
+await alice.sync();
+await bob.sync();
+const aliceChange = await alice.balance(NATIVE_ETH);
+const bobBalance = await bob.balance(NATIVE_ETH);
+console.log(`  Alice change = ${formatEther(aliceChange)} ETH, Bob received = ${formatEther(bobBalance)} ETH`);
+assert.equal(bobBalance, SEND, "Bob received amount");
+assert.equal(aliceChange, SHIELD - SEND, "Alice change");
