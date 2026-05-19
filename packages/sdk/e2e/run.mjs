@@ -98,3 +98,16 @@ const bobBalance = await bob.balance(NATIVE_ETH);
 console.log(`  Alice change = ${formatEther(aliceChange)} ETH, Bob received = ${formatEther(bobBalance)} ETH`);
 assert.equal(bobBalance, SEND, "Bob received amount");
 assert.equal(aliceChange, SHIELD - SEND, "Alice change");
+
+const fresh = "0x00000000000000000000000000000000000000ff";
+const before = await publicClient.getBalance({ address: fresh });
+console.log("• Bob unshields 0.0005 ETH to a clean address (fee 0.00001)");
+await bob.unshield({ token: NATIVE_ETH, amount: WITHDRAW, to: fresh, fee: FEE });
+await bob.sync();
+const after = await publicClient.getBalance({ address: fresh });
+console.log(`  clean address received = ${formatEther(after - before)} ETH`);
+console.log(`  Bob private balance (change) = ${formatEther(await bob.balance(NATIVE_ETH))} ETH`);
+assert.equal(after - before, WITHDRAW, "withdraw amount");
+assert.equal(await bob.balance(NATIVE_ETH), SEND - WITHDRAW - FEE, "Bob change");
+
+console.log("\n✅ e2e passed: Alice shields → sends privately to Bob → Bob unshields, all with real Groth16 proofs on anvil.");
