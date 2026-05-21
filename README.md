@@ -22,3 +22,13 @@ Full-stack monorepo. The marketing site lives separately in `../hestia`.
 
 **Tests:** 31 JS (vitest: common 19, circuits 7, route 5) + 18 Solidity (Foundry) — all green.
 
+## Packages
+
+| Package | Role |
+|---|---|
+| `packages/common` | Crypto spine — notes, commitments, nullifiers, keys, X25519 encryption, meta-address, Merkle. |
+| `packages/circuits` | Circom/Groth16 `transaction` join-split (1x2, 2x2) + ceremony + prove/verify harness. |
+| `packages/contracts` | `HestiaPool`, `AssociationSetRegistry`, on-chain Poseidon, generated verifiers (Foundry). |
+| `packages/route` | Indexer + relayer + HTTP API (`node:http`), Prisma/Postgres persistence schema. |
+| `packages/sdk` | `@hestia/sdk` — the agent surface: shield / send / unshield / balance + agent-tool adapter. |
+
