@@ -52,3 +52,12 @@ anvil & ; cd packages/contracts && forge build
 pnpm --filter @hestia/sdk build && pnpm --filter @hestia/sdk e2e
 ```
 
+## Remaining external ops (P6)
+
+These require resources outside this repo and are intentionally not automated:
+
+1. **Trusted setup** — replace the committed *dev* ceremony with a real multi-party ceremony (public transcript), then regenerate verifiers.
+2. **Audit** — independent review of contracts + circuits (a mainnet gate).
+3. **Deploy** — `forge script script/Deploy.s.sol:Deploy --rpc-url base_sepolia --broadcast --private-key $PK` (needs a funded key); then mainnet.
+4. **Persistence** — wire the Prisma/Postgres store + Railway for the route service (schema in `packages/route/prisma`).
+
