@@ -32,3 +32,23 @@ Full-stack monorepo. The marketing site lives separately in `../hestia`.
 | `packages/route` | Indexer + relayer + HTTP API (`node:http`), Prisma/Postgres persistence schema. |
 | `packages/sdk` | `@hestia/sdk` — the agent surface: shield / send / unshield / balance + agent-tool adapter. |
 
+## Develop
+
+```bash
+pnpm install
+pnpm build && pnpm typecheck && pnpm test     # JS workspace (turbo)
+
+# Contracts (Foundry — installs to ~/.foundry/bin)
+curl -L https://foundry.paradigm.xyz | bash && ~/.foundry/bin/foundryup
+pnpm --filter @hestia/contracts gen:poseidon  # Poseidon bytecode (circomlibjs)
+cd packages/contracts && forge test           # 18 tests
+
+# Circuits (compile + dev ceremony) — needs circom 2.x + snarkjs
+pnpm --filter @hestia/circuits build:circuits
+pnpm --filter @hestia/circuits ceremony
+
+# Live end-to-end (fresh anvil)
+anvil & ; cd packages/contracts && forge build
+pnpm --filter @hestia/sdk build && pnpm --filter @hestia/sdk e2e
+```
+
