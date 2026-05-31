@@ -15,13 +15,34 @@ import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { createRequire } from "node:module";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const POWER = 16;
 const CIRCUITS = ["transaction1x2", "transaction2x2"];
 const force = process.argv.includes("--force");
 
-const snarkjs = (args) => execFileSync("pnpm", ["exec", "snarkjs", ...args], { stdio: "inherit", cwd: root });
+// Call the snarkjs CLI installed in node_modules directly via node (no pnpm/npx resolution).
+// snarkjs 0.7.6 blocks deep imports via "exports" and its main points at a nonexistent build/.
+// Walk node_modules upward to find the real package root, then run its CLI (cli.js) directly.
+function findSnarkjsCli(start) {
+  let dir = start;
+  for (let i = 0; i < 8; i++) {
+    for (const cand of [
+      path.join(dir, "node_modules", "snarkjs", "cli.js"),
+      path.join(dir, "node_modules", "snarkjs", "build", "cli.cjs"),
+      path.join(dir, "node_modules", "snarkjs", "main.js"),
+    ]) {
+      if (existsSync(cand)) return cand;
+    }
+    const up = path.dirname(dir);
+    if (up === dir) break;
+    dir = up;
+  }
+  throw new Error("could not locate snarkjs CLI under node_modules");
+}
+const snarkjsCli = findSnarkjsCli(root);
+const snarkjs = (args) => execFileSync(process.execPath, [snarkjsCli, ...args], { stdio: "inherit", cwd: root });
 
 // --- Phase 1: Powers of Tau ---
 const ptauDir = path.join(root, "build", "ptau");
@@ -33,7 +54,7 @@ if (force || !existsSync(ptauFinal)) {
   const p0 = path.join(ptauDir, `pot${POWER}_0000.ptau`);
   const p1 = path.join(ptauDir, `pot${POWER}_0001.ptau`);
   snarkjs(["powersoftau", "new", "bn128", String(POWER), p0]);
-  snarkjs(["powersoftau", "contribute", p0, p1, "--name=hestia dev", "-e=hestia dev entropy phase1"]);
+  snarkjs(["powersoftau", "contribute", p0, p1, "--name=hestia_dev", "-e=hestia_dev_entropy_phase1"]);
   snarkjs(["powersoftau", "prepare", "phase2", p1, ptauFinal]);
 }
 
@@ -49,7 +70,7 @@ for (const c of CIRCUITS) {
     snarkjs([
       "zkey", "contribute",
       path.join(dir, `${c}_0000.zkey`), finalZkey,
-      `--name=hestia dev ${c}`, `-e=hestia dev zkey ${c}`,
+      `--name=hestia_dev_${c}`, `-e=hestia_dev_zkey_${c}`,
     ]);
   }
   snarkjs(["zkey", "export", "verificationkey", finalZkey, path.join(dir, `${c}.vkey.json`)]);
