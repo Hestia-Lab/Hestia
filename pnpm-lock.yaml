@@ -80,6 +80,12 @@ importers:
         specifier: ^0.1.7
         version: 0.1.7
 
+  packages/lethe:
+    dependencies:
+      '@hestia/common':
+        specifier: workspace:*
+        version: link:../common
+
   packages/route:
     dependencies:
       '@hestia/common':

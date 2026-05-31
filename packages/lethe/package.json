@@ -1,0 +1,14 @@
+{
+  "name": "@hestia/lethe",
+  "version": "0.1.0",
+  "private": false,
+  "license": "MIT",
+  "description": "Lethe — the agent's shielded memory. Built on the Hestia core. Design + PoC stage.",
+  "type": "module",
+  "scripts": {
+    "poc": "node spec/poc.mjs"
+  },
+  "dependencies": {
+    "@hestia/common": "workspace:*"
+  }
+}
