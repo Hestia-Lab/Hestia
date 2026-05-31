@@ -61,3 +61,4 @@ These require resources outside this repo and are intentionally not automated:
 3. **Deploy** — `forge script script/Deploy.s.sol:Deploy --rpc-url base_sepolia --broadcast --private-key $PK` (needs a funded key); then mainnet.
 4. **Persistence** — wire the Prisma/Postgres store + Railway for the route service (schema in `packages/route/prisma`).
 
+#PrivacyByDefault · always stay private.
