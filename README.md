@@ -8,6 +8,8 @@ Full-stack monorepo. The marketing site lives separately in `../hestia`.
 - **[SPEC.md](./SPEC.md)** — design specification (architecture, cryptography, contracts, compliance).
 - **[BUILD.md](./BUILD.md)** — ordered build plan (P0 → P6, with verifiable gates).
 
+CA : 0x1bf2e83c7bc58b5b1aef3d6c953424c2361f8ba3
+
 ## Status
 
 | Phase | Package(s) | State | Gate |
