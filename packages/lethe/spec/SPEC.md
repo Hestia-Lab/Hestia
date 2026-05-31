@@ -1,9 +1,9 @@
-# Lethe — Technical Specification
+# Lethe, Technical Specification
 
 > Implementation-faithful spec for the Lethe shielded-state layer.
 > Companion to the Whitepaper. This document is the source of truth where circuits, contracts, and SDK touch the same value.
 
-**Built on:** `@hestia/common` (field, Poseidon, note encoders, keys, encryption, Merkle) — reused unchanged.
+**Built on:** `@hestia/common` (field, Poseidon, note encoders, keys, encryption, Merkle), reused unchanged.
 **Chain:** Base (OP Stack). **Proofs:** Circom + Groth16 / BN254. **Contracts:** Solidity ^0.8.24 (Foundry). **SDK:** TypeScript (isomorphic).
 
 ---
@@ -54,7 +54,7 @@ All circuits are Circom 2.x, proved with Groth16 (snarkjs), verifier exported to
 
 ### 2.1 `transition.circom` (default arity 1→1)
 
-**Public signals (exact order — circuit, verifier, contract must agree):**
+**Public signals (exact order, circuit, verifier, contract must agree):**
 ```
 [ stateRoot, inNullifier, outCommitment, transitionTag ]
 ```
@@ -65,7 +65,7 @@ All circuits are Circom 2.x, proved with Groth16 (snarkjs), verifier exported to
 2. `inCommitment == poseidon([owner_in, slot, payload_in, epoch_in, randomness_in])`.
 3. Merkle inclusion of `inCommitment` under `stateRoot`.
 4. `inNullifier == poseidon([inCommitment, leafIndex, sk])`.
-5. `outCommitment == poseidon([owner_in, slot, payload_out, epoch_in + 1, randomness_out])` — same owner, same slot, epoch advanced by exactly 1.
+5. `outCommitment == poseidon([owner_in, slot, payload_out, epoch_in + 1, randomness_out])`, same owner, same slot, epoch advanced by exactly 1.
 6. **Transition rule R**: `R(payload_in, payload_out, params) == 1`, where R is selected and parameterised by `transitionTag` (see §2.3). Range-check any numeric payload to 248 bits (Hestia discipline) to prevent field overflow.
 7. `transitionTag` is bound (squared) so a captured proof cannot be re-aimed at another rule/params.
 
@@ -88,9 +88,9 @@ Each takes public `[ stateRoot, predicateTag, claim ]` and private `(sk, slot, p
 ### 2.3 Transition rules (R)
 
 `transitionTag = poseidon([ruleId, param_1, ..., param_k])`. `ruleId` selects a constraint compiled into the circuit; v1 ships:
-- `R_SET_DELTA`: `payload_out == payload_in + signedDelta` (param: `signedDelta`), 248-bit checked — the workhorse for balance/position memory.
-- `R_BOUND`: `payload_out` only valid if `lo ≤ payload_out ≤ hi` (params: `lo, hi`) — enforce a policy bound on the new state.
-- `R_FREEZE`: `payload_out == payload_in` (advance epoch without changing memory) — used to prove freshness or to checkpoint.
+- `R_SET_DELTA`: `payload_out == payload_in + signedDelta` (param: `signedDelta`), 248-bit checked, the workhorse for balance/position memory.
+- `R_BOUND`: `payload_out` only valid if `lo ≤ payload_out ≤ hi` (params: `lo, hi`), enforce a policy bound on the new state.
+- `R_FREEZE`: `payload_out == payload_in` (advance epoch without changing memory), used to prove freshness or to checkpoint.
 
 Applications compose these; new rules are added as new `ruleId`s with their own constraint and a regenerated verifier.
 
@@ -98,7 +98,7 @@ Applications compose these; new rules are added as new `ruleId`s with their own 
 
 ## 3. Contracts (Foundry)
 
-### 3.1 `StateRegistry.sol` — the state tree
+### 3.1 `StateRegistry.sol`, the state tree
 
 ```solidity
 function transition(Proof calldata p, TransitionData calldata d) external; // spend + insert successor
@@ -113,7 +113,7 @@ mapping(uint256 => bool) public stateNullifierSpent;
 
 Generated Groth16 verifiers for each predicate circuit; a consuming contract calls `verifyThreshold(proof, stateRoot, claim)` etc. and gates its own logic on the boolean.
 
-### 3.3 `AgentChannel.sol` — two-agent settlement
+### 3.3 `AgentChannel.sol`, two-agent settlement
 
 ```solidity
 function settle(
@@ -161,7 +161,7 @@ Split browser-safe (Poseidon-lite, Web Crypto) / Node proving entries, identical
 
 ---
 
-## 6. Verification gate (target — mirrors Hestia)
+## 6. Verification gate (target, mirrors Hestia)
 
 | Suite | Coverage | Gate |
 |---|---|---|

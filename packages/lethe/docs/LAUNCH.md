@@ -1,4 +1,4 @@
-# Lethe — Launch assets
+# Lethe, Launch assets
 
 All copy: no em-dash, no en-dash, no emoji. Future-tense where the thing isn't live yet (Lethe is concept/early build; do not claim "live"). Hestia is the verified base; Lethe is the next layer.
 
@@ -16,7 +16,7 @@ All copy: no em-dash, no en-dash, no emoji. Future-tense where the thing isn't l
 
 ---
 
-## Teaser thread is over — this is the reveal, one post
+## Teaser thread is over, this is the reveal, one post
 
 > We intend to shield everything an agent is. Its funds, its links, and its thoughts.
 >
@@ -75,7 +75,7 @@ Lethe    the agent's shielded memory      hides what it knows    state · strate
 
 ---
 
-## Korean (chat / KR audience — UI/site stays English)
+## Korean (chat / KR audience, UI/site stays English)
 
 - 한 줄: 에이전트의 가려진 기억.
 - 떡밥: 우리는 에이전트의 모든 것을 가릴 생각입니다. 자금도, 연결고리도, 그리고 그들의 생각까지.
