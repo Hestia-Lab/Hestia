@@ -1,0 +1,36 @@
+{
+  "name": "@hestia/mcp",
+  "version": "0.1.0",
+  "private": false,
+  "license": "MIT",
+  "description": "MCP server that exposes the live Privashh L3 Privacy Pool (shh.gg) to AI agents as tool calls — read + prepare, no key custody.",
+  "publishConfig": { "access": "public" },
+  "type": "module",
+  "main": "./dist/server.js",
+  "types": "./dist/server.d.ts",
+  "bin": { "hestia-mcp": "./dist/bin.js" },
+  "exports": {
+    ".": {
+      "types": "./dist/server.d.ts",
+      "default": "./dist/server.js"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/bin.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "clean": "rimraf dist"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@privashh/sdk": "^0.1.1",
+    "ethers": "^6.13.4",
+    "zod": "^4.4.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "rimraf": "^6.0.0",
+    "typescript": "^5"
+  }
+}
